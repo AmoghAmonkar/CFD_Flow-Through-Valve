@@ -28,7 +28,7 @@ if __name__ == "__main__":
     
     #Discretization parameters for t
     t_start = 0
-    t_end = 2
+    t_end = 0.2
     dt = 0.00025
     
     #Creating grid for time
@@ -298,9 +298,10 @@ if __name__ == "__main__":
     
     # v-velocity field contour with streamlines
     c3 = axs[2].contourf(X_v, Y_v, v_new[1:-1, 1:].T, levels=40, cmap='plasma')
-    # Choose a subset of the grid points by using a step (stride) to reduce vector density
-    stride_x = 4  # Adjust this to control the density of the vectors
+
+    stride_x = 4
     stride_y = 40
+
     axs[2].quiver(X_u[::stride_x,::stride_y], Y_u[::stride_x,::stride_y], u_new[1:, 1:-1].T[::stride_x, ::stride_y], v_new[1:-1, 1:].T[::stride_x, ::stride_y], color='k', scale=20, scale_units='xy', angles='xy')
     axs[2].set_title("v-Velocity Profile")
     axs[2].set_xlabel("x")
