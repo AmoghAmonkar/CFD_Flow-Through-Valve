@@ -6,6 +6,7 @@ Created on Mon Dec  2 19:08:19 2024
 """
 import numpy as np
 from tqdm import tqdm
+from matplotlib.patches import Rectangle
 import matplotlib.pyplot as plt 
 
 if __name__ == "__main__":
@@ -24,7 +25,7 @@ if __name__ == "__main__":
     #Setting diameter of the pipe
     #Discretization parameters in y direction
     y_start = 0
-    y_end = 1
+    y_end = 0.6
     dy = 0.0125
     
     #Creating grids for p, u and v in y dir
@@ -41,9 +42,9 @@ if __name__ == "__main__":
     t_grid = np.arange(t_start,t_end,dt)
 
     #Valve Thickness and Opening
-    Valve_Thickness = 0.2
+    Valve_Thickness = 0.075
     Nodes_Half_Thick = int(Valve_Thickness/dx)//2
-    Valve_Opening = 0.6
+    Valve_Opening = 0.65
 
     Valve_x_Start = int((len(px_grid))/2) - Nodes_Half_Thick
     Valve_x_End = int((len(px_grid))/2) + Nodes_Half_Thick + 1
@@ -51,8 +52,14 @@ if __name__ == "__main__":
     Valve_y_Start = int((len(vFy_grid)-1)*Valve_Opening) 
     Valve_y_End = int((len(vFy_grid))-1) + 1
 
+    #Density
+    rho = 1000
+
+    #Viscosity
+    mu = 10
+
     #Kinematic Viscosity
-    nu = 0.01
+    nu = mu/rho
 
     #Inital velocities
     p_old = np.zeros((len(px_grid),len(py_grid)))
@@ -83,7 +90,7 @@ if __name__ == "__main__":
     p_old[1:-1,-1] = p_old[1:-1,-2]
 
     #Inlet velocity
-    u_in = 1.8
+    u_in = 1
     #Setting inlet velocity
     u_old[0,:] = u_in
     #Top Boundary
@@ -124,30 +131,27 @@ if __name__ == "__main__":
     p_old[:,0] = p_old[:,1]
     #Upper Wall
     p_old[:,-1] = p_old[:,-2]
-    
-    #t = 0
-    
+
     for iter in tqdm(range(len(t_grid))):
-        
+
         CFL = max(u_in, np.max(u_old)) * dt / dx
         if CFL > 1:
-            raise ValueError("CFL condition not satisfied.")
+            print("CFL condition not satisfied.")
             break
-            #dt = dt/CFL
-        
+
         #Calculating u
         #Diffusion in x direction
         diff_x = (nu*((u_old[2:,1:-1] + u_old[:-2,1:-1] - 2*u_old[1:-1,1:-1])/(dx**2) + 
                       (u_old[1:-1,2:] + u_old[1:-1,:-2] - 2*u_old[1:-1,1:-1])/(dy**2)))
-        
+
         #Advection in x direction
         advec_x = (((u_old[1:-1,1:-1] + u_old[2:,1:-1])**2 - (u_old[1:-1,1:-1] + u_old[:-2,1:-1])**2)/(4*dx) +
                     ((v_old[1:-2,1:] + v_old[2:-1,1:])*(u_old[1:-1,1:-1] + u_old[1:-1,2:]) - 
                      (v_old[1:-2,:-1] + v_old[2:-1,:-1])*(u_old[1:-1,:-2] + u_old[1:-1,1:-1]))/(4*dy))
-        
+
         #Explicit Euler
         uF[1:-1,1:-1] = u_old[1:-1,1:-1] + dt*(diff_x - advec_x)
-        
+
         #Boundary Conditions
         #Inlet velocity
         uF[0,1:-1] = u_in
@@ -168,15 +172,15 @@ if __name__ == "__main__":
         #Diffusion in y direction
         diff_y = (nu*((v_old[2:,1:-1] + v_old[:-2,1:-1] - 2*v_old[1:-1,1:-1])/(dx**2) + 
                       (v_old[1:-1,2:] + v_old[1:-1,:-2] - 2*v_old[1:-1,1:-1])/(dy**2)))
-        
+
         #Advection in y direction
         advec_y = (((v_old[1:-1,1:-1] + v_old[1:-1,2:])**2 - (v_old[1:-1,1:-1] + v_old[1:-1,:-2])**2)/(4*dy) +
                    ((u_old[:-1,1:-2] + u_old[:-1,2:-1])*(v_old[2:,1:-1] + v_old[1:-1,1:-1]) - 
                     (u_old[1:,1:-2] + u_old[1:,2:-1])*(v_old[1:-1,1:-1] + v_old[:-2,1:-1]))/(4*dx))
-        
+
         #Explicit Euler
         vF[1:-1,1:-1] = v_old[1:-1,1:-1] + dt*(diff_y - advec_y)
-        
+
         #Boundary Conditions
         #Inlet velocity
         vF[0,1:-1] = -vF[0,1:-1]
@@ -207,29 +211,18 @@ if __name__ == "__main__":
             
             error = np.max(abs(p_new - p_old))
             
-            #Applying boundary conditions on pressure field
-            #Pressure at Inlet
-            p_new[0,1:-1] = p_new[1,1:-1]
-            #Making pressure inside the valve stem 0
-            #p_new[Valve_x_Start:(Valve_x_End),Valve_y_Start:Valve_y_End] = 0
-            #Making pressure on the Left wall same as adjacent left nodes
-            #p_new[Valve_x_Start:(Valve_x_End),Valve_y_Start:Valve_y_End] = p_new[(Valve_x_Start-1),Valve_y_Start:Valve_y_End]
-            #Making pressure on the Right wall same as adjacent right nodes
-            #p_new[Valve_x_End-2,Valve_y_Start:Valve_y_End] = p_new[Valve_x_End-1,Valve_y_Start:Valve_y_End]
-            #Making pressure on the bottom  wall same as adjacent right nodes
-            #p_new[Valve_x_Start:(Valve_x_End),Valve_y_Start] = p_new[Valve_x_Start:(Valve_x_End),Valve_y_Start-1]
-            #Bottom Wall
-            p_new[:,0] = p_new[:,1]
-            #Upper Wall
-            p_new[:,-1] = p_new[:,-2]
-            #Pressure at Outlet
-            p_new[-1,:] = -p_new[-2,:]
-
-            #p_old after enforcing BCs
             p_old = np.copy(p_new)
-            
             loop_count += 1
-    
+        
+        #Applying boundary conditions on pressure field
+        #Pressure at Inlet
+        p_new[0,1:-1] = p_new[1,1:-1]
+        #Bottom Wall
+        p_new[:,0] = p_new[:,1]
+        #Upper Wall
+        p_new[:,-1] = p_new[:,-2]
+        #Pressure at Outlet
+        p_new[-1,:] = -p_new[-2,:]
         #p_old after enforcing BCs
         p_old = np.copy(p_new)
 
@@ -293,14 +286,34 @@ if __name__ == "__main__":
     axs[1].set_xlabel("x")
     axs[1].set_ylabel("y")
     fig.colorbar(c2, ax=axs[1], label='u-Velocity')
-    
+
     # v-velocity field contour with streamlines
     c3 = axs[2].contourf(X_v, Y_v, v_new[1:-1, 1:].T, levels=40, cmap='plasma')
-    axs[2].streamplot(X_v, Y_v, u_new[1:, 1:-1].T, v_new[1:-1, 1:].T, color='k', linewidth=0.5, density=0.85)
+    # Sampling frequency in x and y direction
+    stride_x = 4
+    stride_y = 40
+    #Plotting vectors
+    axs[2].quiver(X_u[::stride_x,::stride_y], Y_u[::stride_x,::stride_y], u_new[1:, 1:-1].T[::stride_x, ::stride_y], v_new[1:-1, 1:].T[::stride_x, ::stride_y], color='k', scale=20, scale_units='xy', angles='xy')
     axs[2].set_title("v-Velocity Profile")
     axs[2].set_xlabel("x")
     axs[2].set_ylabel("y")
     fig.colorbar(c3, ax=axs[2], label='v-Velocity')
+    
+    # Add rectangular patch for the valve
+    valve_width = Valve_Thickness
+    valve_height = y_end - (vFy_grid[Valve_y_Start] - y_start)
+
+    # Adding patches on the plots
+    for ax in axs:
+        valve_patch = Rectangle(
+            (uFx_grid[Valve_x_Start], vFy_grid[Valve_y_Start]),
+            valve_width,
+            valve_height,
+            color='white',
+            alpha=0.85,
+            label='Valve'
+        )
+        ax.add_patch(valve_patch)
     
     # Adjust layout
     plt.tight_layout()
