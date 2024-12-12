@@ -54,7 +54,7 @@ ax.plot(VX.flatten(), VY.flatten(), 'ro', label='V Grid Points')
 valve_width = Valve_Thickness
 valve_height = y_end - (vy_grid[Valve_y_Start] - y_start)
 valve_patch = Rectangle(
-    (px_grid[Valve_x_Start], vy_grid[Valve_y_Start]),
+    (ux_grid[Valve_x_Start], vy_grid[Valve_y_Start]),
     valve_width,
     valve_height,
     color='gray',
