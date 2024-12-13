@@ -1,5 +1,6 @@
 import cupy as np
 from tqdm import tqdm
+from matplotlib.patches import Rectangle
 import matplotlib.pyplot as plt 
 
 if __name__ == "__main__":
@@ -7,7 +8,7 @@ if __name__ == "__main__":
     #Setting length of the pipe
     #Discretization parameters in x direction
     x_start = 0
-    x_end = 10
+    x_end = 12
     dx = 0.0125
 
     #Creating grids for p, u and v in x dir
@@ -18,7 +19,7 @@ if __name__ == "__main__":
     #Setting diameter of the pipe
     #Discretization parameters in y direction
     y_start = 0
-    y_end = 0.6
+    y_end = 0.75
     dy = 0.0125
     
     #Creating grids for p, u and v in y dir
@@ -28,16 +29,16 @@ if __name__ == "__main__":
     
     #Discretization parameters for t
     t_start = 0
-    t_end = 0.2
+    t_end = 4
     dt = 0.00025
     
     #Creating grid for time
     t_grid = np.arange(t_start,t_end,dt)
 
     #Valve Thickness and Opening
-    Valve_Thickness = 0.2
+    Valve_Thickness = 0.075
     Nodes_Half_Thick = int(Valve_Thickness/dx)//2
-    Valve_Opening = 0.6
+    Valve_Opening = 0.65
 
     Valve_x_Start = int((len(px_grid))/2) - Nodes_Half_Thick
     Valve_x_End = int((len(px_grid))/2) + Nodes_Half_Thick + 1
@@ -225,7 +226,7 @@ if __name__ == "__main__":
             loop_count += 1
     
         #p_old after enforcing BCs
-        p_old = np.copy(p_new)
+        #p_old = np.copy(p_new)
 
         #Calculating corrected velocities
         u_new[1:,1:-1] = uF[1:,1:-1] - dt*((p_new[2:,1:-1] - p_new[:-2,1:-1]) / (2 * dx))
@@ -298,15 +299,31 @@ if __name__ == "__main__":
     
     # v-velocity field contour with streamlines
     c3 = axs[2].contourf(X_v, Y_v, v_new[1:-1, 1:].T, levels=40, cmap='plasma')
-
+    # Sampling frequency in x and y direction
     stride_x = 4
     stride_y = 40
-
+    #Plotting vectors
     axs[2].quiver(X_u[::stride_x,::stride_y], Y_u[::stride_x,::stride_y], u_new[1:, 1:-1].T[::stride_x, ::stride_y], v_new[1:-1, 1:].T[::stride_x, ::stride_y], color='k', scale=20, scale_units='xy', angles='xy')
     axs[2].set_title("v-Velocity Profile")
     axs[2].set_xlabel("x")
     axs[2].set_ylabel("y")
     fig.colorbar(c3, ax=axs[2], label='v-Velocity')
+    
+    # Add rectangular patch for the valve
+    valve_width = Valve_Thickness
+    valve_height = y_end - (vFy_grid[Valve_y_Start] - y_start)
+
+    # Adding patches on the plots
+    for ax in axs:
+        valve_patch = Rectangle(
+            (uFx_grid[Valve_x_Start], vFy_grid[Valve_y_Start]),
+            valve_width,
+            valve_height,
+            color='white',
+            alpha=0.85,
+            label='Valve'
+        )
+        ax.add_patch(valve_patch)
     
     # Adjust layout
     plt.tight_layout()
