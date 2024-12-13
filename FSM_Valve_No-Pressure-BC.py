@@ -25,7 +25,7 @@ if __name__ == "__main__":
     #Setting diameter of the pipe
     #Discretization parameters in y direction
     y_start = 0
-    y_end = 0.6
+    y_end = 0.75
     dy = 0.0125
     
     #Creating grids for p, u and v in y dir
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     
     #Discretization parameters for t
     t_start = 0
-    t_end = 2
+    t_end = 4
     dt = 0.00025
     
     #Creating grid for time
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     #Valve Thickness and Opening
     Valve_Thickness = 0.075
     Nodes_Half_Thick = int(Valve_Thickness/dx)//2
-    Valve_Opening = 0.65
+    Valve_Opening = 0.45
 
     Valve_x_Start = int((len(px_grid))/2) - Nodes_Half_Thick
     Valve_x_End = int((len(px_grid))/2) + Nodes_Half_Thick + 1
@@ -211,20 +211,20 @@ if __name__ == "__main__":
             
             error = np.max(abs(p_new - p_old))
             
-            p_old = np.copy(p_new)
+            #p_old = np.copy(p_new)
             loop_count += 1
         
-        #Applying boundary conditions on pressure field
-        #Pressure at Inlet
-        p_new[0,1:-1] = p_new[1,1:-1]
-        #Bottom Wall
-        p_new[:,0] = p_new[:,1]
-        #Upper Wall
-        p_new[:,-1] = p_new[:,-2]
-        #Pressure at Outlet
-        p_new[-1,:] = -p_new[-2,:]
-        #p_old after enforcing BCs
-        p_old = np.copy(p_new)
+            #Applying boundary conditions on pressure field
+            #Pressure at Inlet
+            p_new[0,1:-1] = p_new[1,1:-1]
+            #Bottom Wall
+            p_new[:,0] = p_new[:,1]
+            #Upper Wall
+            p_new[:,-1] = p_new[:,-2]
+            #Pressure at Outlet
+            p_new[-1,:] = -p_new[-2,:]
+            #p_old after enforcing BCs
+            p_old = np.copy(p_new)
 
         #Calculating corrected velocities
         u_new[1:,1:-1] = uF[1:,1:-1] - dt*((p_new[2:,1:-1] - p_new[:-2,1:-1]) / (2 * dx))
