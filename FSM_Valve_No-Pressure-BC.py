@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Dec  2 19:08:19 2024
-
-@author: aaamonka
-"""
 import numpy as np
 from tqdm import tqdm
 from matplotlib.patches import Rectangle
@@ -35,7 +29,11 @@ if __name__ == "__main__":
     
     #Discretization parameters for t
     t_start = 0
+    ###########################################################################################################################
+    # Change here to set endtime
+    ###########################################################################################################################
     t_end = 4
+    ###########################################################################################################################
     dt = 0.00025
     
     #Creating grid for time
@@ -44,7 +42,11 @@ if __name__ == "__main__":
     #Valve Thickness and Opening
     Valve_Thickness = 0.075
     Nodes_Half_Thick = int(Valve_Thickness/dx)//2
-    Valve_Opening = 0.45
+    ###########################################################################################################################
+    # Change here to set valve opening
+    ###########################################################################################################################
+    Valve_Opening = 0.75
+    ###########################################################################################################################
 
     Valve_x_Start = int((len(px_grid))/2) - Nodes_Half_Thick
     Valve_x_End = int((len(px_grid))/2) + Nodes_Half_Thick + 1
@@ -281,7 +283,7 @@ if __name__ == "__main__":
     
     # u-velocity field contour with streamlines
     c2 = axs[1].contourf(X_u, Y_u, u_new[1:, 1:-1].T, levels=40, cmap='jet')
-    axs[1].streamplot(X_u, Y_u, u_new[1:, 1:-1].T, v_new[1:-1, 1:].T, color='k', linewidth=0.5, density=0.85)
+    axs[1].streamplot(X_u, Y_u, u_new[1:, 1:-1].T, v_new[1:-1, 1:].T, color='k', linewidth=0.5, density=3)
     axs[1].set_title("u-Velocity Profile")
     axs[1].set_xlabel("x")
     axs[1].set_ylabel("y")
